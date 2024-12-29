@@ -1,0 +1,7 @@
+.venv
+.idea
+*.png
+*.jpg
+*.pdf
+__pythoncache__
+*.pyc
