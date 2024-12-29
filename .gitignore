@@ -5,3 +5,5 @@
 *.pdf
 __pythoncache__
 *.pyc
+dist
+*.egg-info

@@ -3,13 +3,13 @@ import io
 import os
 import xml.etree.ElementTree as ET
 
-import fitz  # PyMuPDF
+import fitz
 import pytesseract
 from PIL import Image
 
 
 class PDFTextExtractor:
-    def __init__(self, pdf_path, image_dir, output_text_file):
+    def __init__(self, pdf_path, image_dir, output_text_file: str = 'output.md'):
         """Initialize with PDF path, image directory, and output file."""
         self.pdf_path = pdf_path
         self.image_dir = image_dir
@@ -33,15 +33,12 @@ class PDFTextExtractor:
                 image = doc.extract_image(xref)
                 image_bytes = image["image"]
 
-                # Convert image bytes to a PIL Image
                 img = Image.open(io.BytesIO(image_bytes))
 
-                # Define the image filename and save path
                 img_filename = f"image_{page_num + 1}_{img_index + 1}.png"
                 img_path = os.path.join(self.image_dir, img_filename)
                 img.save(img_path)
 
-                # Append image path to the list
                 image_paths.append(img_path)
 
         return image_paths
@@ -65,19 +62,17 @@ class PDFTextExtractor:
         for page_num in range(len(doc)):
             page = doc.load_page(page_num)
             text += page.get_text("text")
-        self.pdf_text = text  # Save the PDF text for later use
+        self.pdf_text = text
 
     def save_text_to_markdown(self):
         """Save the extracted text to a markdown file."""
         with open(self.output_text_file, 'w') as f:
-            # Write extracted text from the PDF first
             if self.pdf_text.strip():
                 f.write("### PDF Text\n")
                 f.write(self.pdf_text + "\n\n")
 
-            # Then write extracted text from the images
             for text in self.image_texts:
-                if text.strip():  # Check if image contains any text
+                if text.strip():
                     f.write("### Image Text\n")
                     f.write(text + "\n\n")
                 else:
@@ -91,7 +86,7 @@ class PDFTextExtractor:
             extracted_data.append({"text": self.pdf_text.strip()})
 
         for text in self.image_texts:
-            if text.strip():  # Only include non-empty image text
+            if text.strip():
                 extracted_data.append({"image_text": text.strip()})
 
         return extracted_data
@@ -164,23 +159,3 @@ class PDFTextExtractor:
         self.save_text_to_markdown()
 
         print(f"Text extraction complete. Output saved to {self.output_text_file}")
-
-
-pdf_path = "www.pdf"
-image_dir = "extracted_images"
-output_text_file = "extracted_text.md"
-
-extractor = PDFTextExtractor(pdf_path, image_dir, output_text_file)
-
-extractor.extract_and_save_text()
-
-extracted_dict = extractor.convert_to_dict()
-print(extracted_dict)
-
-markdown_str = extractor.convert_to_markdown()
-print(markdown_str)
-dataset = extractor.convert_to_dataset()
-print(dataset)
-
-xml_str = extractor.convert_to_xml()
-print(xml_str)
