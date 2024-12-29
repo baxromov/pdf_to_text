@@ -11,7 +11,7 @@ def parse_requirements(filename):
 
 setup(
     name="pdf-text-extractor",
-    version="0.1.0",
+    version="0.1.1",
     description="Extract text and images from PDF files",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
