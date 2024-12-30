@@ -3,7 +3,7 @@
 project = 'pdf-text-extractor'
 author = 'Shahzod'
 
-release = "0.1.7"
+release = "0.1.9"
 
 # -- General configuration ---------------------------------------------------
 extensions = [

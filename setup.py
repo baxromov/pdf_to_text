@@ -35,7 +35,7 @@ setup(
     long_description_content_type="text/markdown",
     author="Shahzod",
     author_email="baxromov.shahzodbek@gmail.com",
-    url="https://github.com/baxromov/pdf-text-extractor",
+    url="https://github.com/baxromov/pdf_to_text",
     packages=find_packages(),
     install_requires=[
         'opencv-python',
@@ -49,4 +49,9 @@ setup(
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.12",
+    project_urls={
+        "Documentation": "https://pdf-to-text.readthedocs.io/en/latest/",
+        "Source Code": "https://github.com/baxromov/pdf_to_text",
+        "Issue Tracker": "https://github.com/baxromov/pdf_to_text/issues",
+    },
 )
