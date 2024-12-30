@@ -17,11 +17,12 @@ def read_me(filename):
         return f.read()
 
 
+long_description = read_me('README.md')
 setup(
     name="pdf-text-extractor",
-    version="0.1.3",
+    version="0.1.4",
     description="Extract text and images from PDF files",
-    long_description=read_me('README.md'),
+    long_description=long_description,
     long_description_content_type="text/markdown",
     author="Shahzod",
     author_email="baxromov.shahzodbek@gmail.com",
