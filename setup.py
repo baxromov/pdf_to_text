@@ -41,7 +41,8 @@ setup(
         'opencv-python',
         'pillow',
         'PyMuPDF',
-        'pytesseract'
+        'pytesseract',
+        'ollama'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

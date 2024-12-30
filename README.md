@@ -63,6 +63,14 @@ for item in results:
         print("Image Text:", item["image_text"])
 
 ```
+Text and Image Extraction with LLM: 
+
+The latest version adds a feature to refine OCR-processed text using a language model (LLM), such as Ollama. This enhances the accuracy and readability of text extracted from images embedded within the PDF.
+
+```python
+# Extract text and image content with LLM refinement for image-based text
+results = extractor.process_and_extract_text(use_llm_for_image_text=True)
+```
 
 ---
 Output Format
