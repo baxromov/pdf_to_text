@@ -1,161 +1,94 @@
-import concurrent.futures
 import io
 import os
-import xml.etree.ElementTree as ET
 
+import cv2
 import fitz
 import pytesseract
 from PIL import Image
 
 
 class PDFTextExtractor:
-    def __init__(self, pdf_path, image_dir, output_text_file: str = 'output.md'):
-        """Initialize with PDF path, image directory, and output file."""
+    def __init__(self, pdf_path, image_dir):
+        """Initialize with PDF path and image directory."""
         self.pdf_path = pdf_path
         self.image_dir = image_dir
-        self.output_text_file = output_text_file
-        self.pdf_text = ""
-        self.image_texts = []
 
-    def extract_images_from_pdf(self):
+    def __extract_images_from_pdf(self):
         """Extract images from the PDF and save them as PNG files."""
         doc = fitz.open(self.pdf_path)
         image_paths = []
 
-        # Loop through each page in the PDF
         for page_num in range(len(doc)):
             page = doc.load_page(page_num)
             img_list = page.get_images(full=True)
 
-            # Extract and save images from the current page
             for img_index, img in enumerate(img_list):
                 xref = img[0]
                 image = doc.extract_image(xref)
                 image_bytes = image["image"]
 
                 img = Image.open(io.BytesIO(image_bytes))
-
                 img_filename = f"image_{page_num + 1}_{img_index + 1}.png"
                 img_path = os.path.join(self.image_dir, img_filename)
                 img.save(img_path)
 
-                image_paths.append(img_path)
+                image_paths.append((page_num, img_path))  # Include page number for ordering
 
         return image_paths
 
-    def extract_text_from_image(self, image_path):
-        """Extract text from an image using Tesseract OCR."""
-        img = Image.open(image_path)
-        text = pytesseract.image_to_string(img)
-        return text
+    def __preprocess_image(self, image_path):
+        """Preprocess image to improve OCR accuracy."""
+        image = cv2.imread(image_path, cv2.IMREAD_COLOR)
+        if image is None:
+            raise ValueError(f"Image at path {image_path} could not be loaded.")
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        contrast = cv2.convertScaleAbs(gray, alpha=1.5, beta=0)
+        _, binary = cv2.threshold(contrast, 128, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        denoised = cv2.GaussianBlur(binary, (5, 5), 0)
+        return denoised
 
-    def extract_text_from_images_parallel(self, image_paths):
-        """Extract text from a list of images in parallel."""
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            texts = list(executor.map(self.extract_text_from_image, image_paths))
-        return texts
+    def __extract_text_from_image(self, image_path):
+        """Extract text from an image using Tesseract OCR after preprocessing."""
+        preprocessed_image = self.__preprocess_image(image_path)
+        pil_image = Image.fromarray(preprocessed_image)
+        custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ -l eng'
+        return pytesseract.image_to_string(pil_image, config=custom_config).strip()
 
-    def extract_text_from_pdf(self):
-        """Extract text directly from the PDF using PyMuPDF."""
-        doc = fitz.open(self.pdf_path)
-        text = ""
-        for page_num in range(len(doc)):
-            page = doc.load_page(page_num)
-            text += page.get_text("text")
-        self.pdf_text = text
-
-    def save_text_to_markdown(self):
-        """Save the extracted text to a markdown file."""
-        with open(self.output_text_file, 'w') as f:
-            if self.pdf_text.strip():
-                f.write("### PDF Text\n")
-                f.write(self.pdf_text + "\n\n")
-
-            for text in self.image_texts:
-                if text.strip():
-                    f.write("### Image Text\n")
-                    f.write(text + "\n\n")
-                else:
-                    f.write("### Image Text\n")
-                    f.write("\n\n")
-
-    def convert_to_dict(self):
-        extracted_data = []
-
-        if self.pdf_text.strip():
-            extracted_data.append({"text": self.pdf_text.strip()})
-
-        for text in self.image_texts:
-            if text.strip():
-                extracted_data.append({"image_text": text.strip()})
-
-        return extracted_data
-
-    def convert_to_markdown(self):
-        """Convert the extracted text to a markdown string."""
-        markdown_str = ""
-
-        if self.pdf_text.strip():
-            markdown_str += "### PDF Text\n"
-            markdown_str += self.pdf_text + "\n\n"
-
-        for text in self.image_texts:
-            if text.strip():
-                markdown_str += "### Image Text\n"
-                markdown_str += text + "\n\n"
-            else:
-                markdown_str += "### Image Text\n"
-                markdown_str += "\n\n"
-
-        return markdown_str
-
-    def convert_to_dataset(self):
-        """Convert the extracted text to a dataset (list of dictionaries)."""
-        dataset = []
-
-        if self.pdf_text.strip():
-            dataset.append({
-                "text_type": "pdf",
-                "text_content": self.pdf_text.strip()
-            })
-
-        for text in self.image_texts:
-            if text.strip():
-                dataset.append({
-                    "text_type": "image",
-                    "text_content": text.strip()
-                })
-
-        return dataset
-
-    def convert_to_xml(self):
-        """Convert the extracted text to XML format."""
-        root = ET.Element("extracted_text")
-
-        if self.pdf_text.strip():
-            pdf_element = ET.SubElement(root, "pdf_text")
-            pdf_element.text = self.pdf_text.strip()
-
-        for text in self.image_texts:
-            if text.strip():
-                image_element = ET.SubElement(root, "image_text")
-                image_element.text = text.strip()
-
-        tree = ET.ElementTree(root)
-        xml_str = ET.tostring(root, encoding="unicode", method="xml")
-
-        return xml_str
-
-    def extract_and_save_text(self):
+    def process_and_extract_text(self):
+        """Extract and process text from both PDF and images, returning a combined result."""
         if not os.path.exists(self.image_dir):
             os.makedirs(self.image_dir)
 
-        image_paths = self.extract_images_from_pdf()
+        doc = fitz.open(self.pdf_path)
+        results = []
 
-        self.image_texts = self.extract_text_from_images_parallel(image_paths)
+        # Extract text and images from each page
+        for page_num in range(len(doc)):
+            # Extract text from the current page
+            page = doc.load_page(page_num)
+            pdf_text = page.get_text("text").strip()
+            if pdf_text:
+                results.append({"text": pdf_text})
 
-        self.extract_text_from_pdf()
+            # Extract and process images from the current page
+            img_list = page.get_images(full=True)
+            for img_index, img in enumerate(img_list):
+                xref = img[0]
+                image = doc.extract_image(xref)
+                image_bytes = image["image"]
 
-        self.save_text_to_markdown()
+                img = Image.open(io.BytesIO(image_bytes))
+                img_filename = f"image_{page_num + 1}_{img_index + 1}.png"
+                img_path = os.path.join(self.image_dir, img_filename)
+                img.save(img_path)
 
-        print(f"Text extraction complete. Output saved to {self.output_text_file}")
+                # Extract text from the image
+                try:
+                    image_text = self.__extract_text_from_image(img_path)
+                    if image_text:
+                        results.append({"image_text": image_text})
+                except Exception as e:
+                    print(f"Error processing {img_path}: {e}")
+                    results.append({"image_text": ""})  # Append empty text if processing fails
+
+        return results

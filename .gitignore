@@ -8,3 +8,7 @@ __pythoncache__
 dist
 *.egg-info
 .env
+playground.py
+temp
+example.py
+output.md
