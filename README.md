@@ -19,12 +19,10 @@ the order of appearance.
 
 ### Python
 
-- **Python Version**: 3.7 or higher
-- **Required Libraries**:  
-  Install dependencies via pip:
+- **Python Version**: 3.12 or higher
 
 ```shell
-pip install opencv-python pillow PyMuPDF pytesseract
+pip install pdf-text-extractor
 ```
 
 Tesseract OCR
