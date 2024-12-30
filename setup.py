@@ -1,5 +1,6 @@
-from setuptools import setup, find_packages
 import os
+
+from setuptools import setup, find_packages
 
 
 def parse_requirements(filename):
@@ -9,11 +10,18 @@ def parse_requirements(filename):
         return [line.strip() for line in f if line and not line.startswith('#')]
 
 
+def read_me(filename):
+    if not os.path.exists(filename):
+        return None
+    with open(filename, 'r') as f:
+        return f.read()
+
+
 setup(
     name="pdf-text-extractor",
-    version="0.1.2",
+    version="0.1.3",
     description="Extract text and images from PDF files",
-    long_description=open("README.md").read(),
+    long_description=read_me('README.md'),
     long_description_content_type="text/markdown",
     author="Shahzod",
     author_email="baxromov.shahzodbek@gmail.com",
