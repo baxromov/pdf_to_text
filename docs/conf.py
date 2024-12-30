@@ -3,16 +3,7 @@
 project = 'pdf-text-extractor'
 author = 'Shahzod'
 
-
-# Get the version from _version.py
-def get_version(version_file="_version.py"):
-    version = {}
-    with open(version_file) as f:
-        exec(f.read(), version)
-    return version['__version__']
-
-version = get_version()
-release = version
+release = "0.1.5"
 
 # -- General configuration ---------------------------------------------------
 extensions = [
