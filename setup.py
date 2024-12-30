@@ -2,6 +2,8 @@ import os
 
 from setuptools import setup, find_packages
 
+ROOT = os.path.abspath(os.path.dirname(__file__))
+
 
 def parse_requirements(filename):
     if not os.path.exists(filename):
@@ -10,19 +12,26 @@ def parse_requirements(filename):
         return [line.strip() for line in f if line and not line.startswith('#')]
 
 
-def read_me(filename):
-    if not os.path.exists(filename):
-        return None
-    with open(filename, 'r') as f:
-        return f.read()
+def read_version():
+    data = {}
+    path = os.path.join(ROOT, "pdf_text_extractor", "_version.py")
+    with open(path, "r", encoding="utf-8") as f:
+        exec(f.read(), data)
+    return data["__version__"]
 
 
-long_description = read_me('README.md')
+def read_long_description():
+    path = os.path.join(ROOT, "README.md")
+    with open(path, "r", encoding="utf-8") as f:
+        text = f.read()
+    return text
+
+
 setup(
     name="pdf-text-extractor",
-    version="0.1.4",
+    version=read_version(),
     description="Extract text and images from PDF files",
-    long_description=long_description,
+    long_description=read_long_description(),
     long_description_content_type="text/markdown",
     author="Shahzod",
     author_email="baxromov.shahzodbek@gmail.com",
