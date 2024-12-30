@@ -37,7 +37,12 @@ setup(
     author_email="baxromov.shahzodbek@gmail.com",
     url="https://github.com/baxromov/pdf-text-extractor",
     packages=find_packages(),
-    install_requires=parse_requirements('requirements.txt'),
+    install_requires=[
+        'opencv-python',
+        'pillow',
+        'PyMuPDF',
+        'pytesseract'
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
