@@ -55,18 +55,16 @@ class PDFTextExtractor:
         custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ -l eng'
         return pytesseract.image_to_string(pil_image, config=custom_config).strip()
 
-    def process_and_extract_text(self, use_llm_for_image_text: bool = False):
+    def process_and_extract_text(self, use_llm_for_image_text: bool = False, model: str = 'mistral:latest'):
         """
-        Extracts and processes text from both PDF pages and images. The method returns a combined list of text content
-        from the PDF and OCR-processed text from embedded images.
+        Extract and process text from a PDF and its embedded images.
 
-        Parameters:
-        - use_llm_for_image_text (bool): If set to True, the OCR-processed image text will be further refined using the
-        Ollama LLM model for improved readability and accuracy.
+        Args:
+            use_llm_for_image_text (bool): Refine OCR-extracted image text using a language model (default: False).
+            model (str): Specify the LLM model for refinement (default: 'mistral:latest').
 
         Returns:
-        - list: A list of dictionaries where each dictionary contains 'text' or 'image_text' with extracted content from
-        the PDF or OCR-processed image.
+            list[dict]: Combined content, with 'text' for PDF text and 'image_text' for processed image text.
         """
         if not os.path.exists(self.__image_dir):
             os.makedirs(self.__image_dir)
@@ -95,7 +93,8 @@ class PDFTextExtractor:
                     image_text = self.__extract_text_from_image(img_path)
                     if image_text:
                         if use_llm_for_image_text:
-                            results.append({"image_text": self.__rewrite_extracted_text_with_ollama_models(image_text)})
+                            results.append(
+                                {"image_text": self.__rewrite_extracted_text_with_ollama_models(image_text, model)})
                         else:
                             results.append({"image_text": image_text})
                 except Exception as e:
