@@ -1,1 +1,1 @@
-from pdf_text_extractor.extractor import PDFTextExtractor
+from pdf_text_extractor.extractor import FileTextExtractor
